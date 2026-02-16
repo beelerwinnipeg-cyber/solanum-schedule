@@ -94,11 +94,9 @@
     overflow: hidden;
     font-size: 11px;
     z-index: 2;
-    transition: opacity 0.2s;
   }
-  .block:hover {
-    opacity: 0.9;
-    z-index: 10;
+  .block.has-bullets {
+    overflow: visible;
   }
   .block-time {
     font-size: 10px;
@@ -122,28 +120,15 @@
   .bullets-toggle {
     cursor: pointer;
     margin-top: 2px;
+    -webkit-tap-highlight-color: transparent;
   }
   .bullets-hint {
-    font-size: 10px;
+    font-size: 11px;
     color: #ebcb8b;
-    opacity: 0.8;
+    padding: 4px 0;
   }
   .bullets-content {
     display: none;
-    padding: 4px 0;
-  }
-  .bullets-toggle.expanded {
-    position: absolute;
-    left: 0; right: 0;
-    background: #2a2a3d;
-    border: 1px solid #ebcb8b;
-    border-radius: 6px;
-    padding: 8px 12px;
-    z-index: 30;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  }
-  .bullets-toggle.expanded .bullets-hint {
-    margin-bottom: 6px;
   }
   .bullets-toggle:not(.expanded) .bullets-hint::before {
     content: '▸ ';
@@ -153,6 +138,60 @@
   }
   .bullets-toggle.expanded .bullets-content {
     display: block;
+  }
+  .bullets-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 99;
+  }
+  .bullets-overlay.show {
+    display: block;
+  }
+  .bullets-panel {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: #2a2a3d;
+    border-top: 2px solid #ebcb8b;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 24px 32px;
+    z-index: 100;
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bullets-panel.show {
+    display: block;
+  }
+  .bullets-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ebcb8b;
+    margin-bottom: 4px;
+  }
+  .bullets-panel-subtitle {
+    font-size: 11px;
+    color: #7b7b8e;
+    margin-bottom: 14px;
+  }
+  .bullets-panel .bullet {
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 6px 0;
+    border-bottom: 1px solid #313244;
+  }
+  .bullets-panel .bullet:last-child {
+    border-bottom: none;
+  }
+  .bullets-panel-close {
+    text-align: center;
+    padding: 12px;
+    color: #7b7b8e;
+    font-size: 13px;
+    cursor: pointer;
   }
   .cat-blocked {
     opacity: 0.3;
@@ -314,7 +353,7 @@
         <div class="day-column today">
             <div class="day-header">Mon Feb 16</div>
             <div class="day-body" style="height:960px;">
-                <div class="now-marker" style="top:698px;"></div>
+                <div class="now-marker" style="top:700px;"></div>
                 
             <div class="block cat-blocked"
                  style="top:150px; height:30px; background:#3b3b4f20; border-color:#3b3b4f; ">
@@ -616,14 +655,11 @@
                 <div class="block-label">Lunch</div>
                 
             </div>
-            <div class="block cat-filming"
+            <div class="block cat-filming has-bullets"
                  style="top:360px; height:90px; background:#ebcb8b20; border-color:#ebcb8b; border-left: 3px solid #ebcb8b;">
                 <div class="block-time">13:00–14:30</div>
                 <div class="block-label">Filming — Atlanta weather recap</div>
-                <div class="bullets-toggle" onclick="this.classList.toggle('expanded')">
-                    <div class="bullets-hint">Talking points</div>
-                    <div class="bullets-content"><div class="bullet">• Open: 62°F and clear today (Sunday) but big drop from the 70s earlier this week</div><div class="bullet">• Midweek warmup: Atlanta hit 76°F Thursday — nearly 20° above normal for February</div><div class="bullet">• Rain moved in Friday–Saturday (72% chance Fri) — recap what actually fell</div><div class="bullet">• The big story: 12°F drop Saturday→Sunday (68° → 56°) — cold front passage</div><div class="bullet">• Wind picking up Sunday: 18mph gusts, feels much colder than 56°</div><div class="bullet">• Looking ahead: Will the cool-down stick or bounce back? Tease next week</div><div class="bullet">• February context: Are we running above normal? (Spoiler: yes, 69° high today vs ~55° avg)</div></div>
-                </div>
+                <div class="bullets-hint" onclick="openBullets('panel-2026-02-22-360')">Talking points</div>
             </div>
             <div class="block cat-editing"
                  style="top:450px; height:120px; background:#b48ead20; border-color:#b48ead; ">
@@ -653,8 +689,27 @@
         </div>
     </div>
   </div>
+  <div class="bullets-overlay" id="bulletsOverlay" onclick="closeBullets()"></div>
+  
+    <div class="bullets-panel" id="panel-2026-02-22-360">
+        <div class="bullets-panel-title">Filming — Atlanta weather recap</div>
+        <div class="bullets-panel-subtitle">13:00–14:30</div>
+        <div class="bullet">• Open: 62°F and clear today (Sunday) but big drop from the 70s earlier this week</div><div class="bullet">• Midweek warmup: Atlanta hit 76°F Thursday — nearly 20° above normal for February</div><div class="bullet">• Rain moved in Friday–Saturday (72% chance Fri) — recap what actually fell</div><div class="bullet">• The big story: 12°F drop Saturday→Sunday (68° → 56°) — cold front passage</div><div class="bullet">• Wind picking up Sunday: 18mph gusts, feels much colder than 56°</div><div class="bullet">• Looking ahead: Will the cool-down stick or bounce back? Tease next week</div><div class="bullet">• February context: Are we running above normal? (Spoiler: yes, 69° high today vs ~55° avg)</div>
+        <div class="bullets-panel-close" onclick="closeBullets()">Tap to close</div>
+    </div>
   <script>
     document.getElementById('scheduleContainer').scrollTop = 600;
+
+    function openBullets(id) {
+      document.getElementById('bulletsOverlay').classList.add('show');
+      document.getElementById(id).classList.add('show');
+    }
+    function closeBullets() {
+      document.getElementById('bulletsOverlay').classList.remove('show');
+      document.querySelectorAll('.bullets-panel').forEach(function(p) {
+        p.classList.remove('show');
+      });
+    }
 
     // Mobile day-tab switching
     (function() {
