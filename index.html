@@ -114,12 +114,45 @@
     text-overflow: ellipsis;
   }
   .bullet {
-    font-size: 9px;
+    font-size: 11px;
+    opacity: 0.9;
+    line-height: 1.5;
+    padding: 2px 0;
+  }
+  .bullets-toggle {
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .bullets-hint {
+    font-size: 10px;
+    color: #ebcb8b;
     opacity: 0.8;
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  }
+  .bullets-content {
+    display: none;
+    padding: 4px 0;
+  }
+  .bullets-toggle.expanded {
+    position: absolute;
+    left: 0; right: 0;
+    background: #2a2a3d;
+    border: 1px solid #ebcb8b;
+    border-radius: 6px;
+    padding: 8px 12px;
+    z-index: 30;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .bullets-toggle.expanded .bullets-hint {
+    margin-bottom: 6px;
+  }
+  .bullets-toggle:not(.expanded) .bullets-hint::before {
+    content: '▸ ';
+  }
+  .bullets-toggle.expanded .bullets-hint::before {
+    content: '▾ ';
+  }
+  .bullets-toggle.expanded .bullets-content {
+    display: block;
   }
   .cat-blocked {
     opacity: 0.3;
@@ -281,7 +314,7 @@
         <div class="day-column today">
             <div class="day-header">Mon Feb 16</div>
             <div class="day-body" style="height:960px;">
-                <div class="now-marker" style="top:697px;"></div>
+                <div class="now-marker" style="top:698px;"></div>
                 
             <div class="block cat-blocked"
                  style="top:150px; height:30px; background:#3b3b4f20; border-color:#3b3b4f; ">
@@ -584,10 +617,13 @@
                 
             </div>
             <div class="block cat-filming"
-                 style="top:360px; height:139px; background:#ebcb8b20; border-color:#ebcb8b; border-left: 3px solid #ebcb8b; z-index: 5; overflow: visible;">
+                 style="top:360px; height:90px; background:#ebcb8b20; border-color:#ebcb8b; border-left: 3px solid #ebcb8b;">
                 <div class="block-time">13:00–14:30</div>
                 <div class="block-label">Filming — Atlanta weather recap</div>
-                <div class="bullet">• Open: 62°F and clear today (Sunday) but big drop from the 70s earlier this week</div><div class="bullet">• Midweek warmup: Atlanta hit 76°F Thursday — nearly 20° above normal for February</div><div class="bullet">• Rain moved in Friday–Saturday (72% chance Fri) — recap what actually fell</div><div class="bullet">• The big story: 12°F drop Saturday→Sunday (68° → 56°) — cold front passage</div><div class="bullet">• Wind picking up Sunday: 18mph gusts, feels much colder than 56°</div><div class="bullet">• Looking ahead: Will the cool-down stick or bounce back? Tease next week</div><div class="bullet">• February context: Are we running above normal? (Spoiler: yes, 69° high today vs ~55° avg)</div>
+                <div class="bullets-toggle" onclick="this.classList.toggle('expanded')">
+                    <div class="bullets-hint">Talking points</div>
+                    <div class="bullets-content"><div class="bullet">• Open: 62°F and clear today (Sunday) but big drop from the 70s earlier this week</div><div class="bullet">• Midweek warmup: Atlanta hit 76°F Thursday — nearly 20° above normal for February</div><div class="bullet">• Rain moved in Friday–Saturday (72% chance Fri) — recap what actually fell</div><div class="bullet">• The big story: 12°F drop Saturday→Sunday (68° → 56°) — cold front passage</div><div class="bullet">• Wind picking up Sunday: 18mph gusts, feels much colder than 56°</div><div class="bullet">• Looking ahead: Will the cool-down stick or bounce back? Tease next week</div><div class="bullet">• February context: Are we running above normal? (Spoiler: yes, 69° high today vs ~55° avg)</div></div>
+                </div>
             </div>
             <div class="block cat-editing"
                  style="top:450px; height:120px; background:#b48ead20; border-color:#b48ead; ">
