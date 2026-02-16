@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solanum — Weekly Schedule</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #d8dee9;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+    overflow-x: hidden;
+  }
+  .header {
+    padding: 20px 30px;
+    background: #181825;
+    border-bottom: 1px solid #313244;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #c4a7d7;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: #7b7b8e;
+  }
+  .schedule-container {
+    display: flex;
+    padding: 10px 0 20px 0;
+    overflow-y: auto;
+    height: calc(100vh - 70px);
+  }
+  .time-gutter {
+    width: 70px;
+    min-width: 70px;
+    position: relative;
+    padding-top: 40px;
+  }
+  .hour-label {
+    position: absolute;
+    right: 10px;
+    font-size: 11px;
+    color: #7b7b8e;
+    transform: translateY(-7px);
+  }
+  .days-wrapper {
+    display: flex;
+    flex: 1;
+    gap: 1px;
+    padding-top: 0;
+  }
+  .day-column {
+    flex: 1;
+    min-width: 120px;
+    position: relative;
+  }
+  .day-column.today .day-header {
+    color: #ebcb8b;
+    font-weight: 700;
+  }
+  .day-header {
+    text-align: center;
+    padding: 10px 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #d8dee9;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #313244;
+  }
+  .day-body {
+    position: relative;
+    border-left: 1px solid #313244;
+  }
+  .grid-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: #313244;
+  }
+  .block {
+    position: absolute;
+    left: 4px; right: 4px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    border-left: 3px solid;
+    overflow: hidden;
+    font-size: 11px;
+    z-index: 2;
+    transition: opacity 0.2s;
+  }
+  .block:hover {
+    opacity: 0.9;
+    z-index: 10;
+  }
+  .block-time {
+    font-size: 10px;
+    opacity: 0.7;
+    white-space: nowrap;
+  }
+  .block-label {
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bullet {
+    font-size: 9px;
+    opacity: 0.8;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cat-blocked {
+    opacity: 0.3;
+  }
+  .cat-filming .block-label {
+    color: #ebcb8b;
+  }
+  .now-marker {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: #bf616a;
+    z-index: 20;
+  }
+  .now-marker::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    background: #bf616a;
+    border-radius: 50%;
+  }
+
+  /* --- Mobile: show one day at a time with swipeable tabs --- */
+  .day-tabs {
+    display: none;
+    background: #181825;
+    border-bottom: 1px solid #313244;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 8px;
+  }
+  .day-tab {
+    display: inline-block;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #7b7b8e;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .day-tab.active {
+    color: #ebcb8b;
+    border-bottom-color: #ebcb8b;
+    font-weight: 700;
+  }
+  .day-tab.is-today {
+    color: #c4a7d7;
+  }
+  .day-tab.is-today.active {
+    color: #ebcb8b;
+  }
+
+  @media (max-width: 600px) {
+    .day-tabs {
+      display: flex;
+    }
+    .header {
+      padding: 14px 16px;
+    }
+    .header h1 {
+      font-size: 16px;
+    }
+    .schedule-container {
+      height: calc(100vh - 110px);
+    }
+    .time-gutter {
+      width: 50px;
+      min-width: 50px;
+    }
+    .hour-label {
+      font-size: 10px;
+      right: 6px;
+    }
+    .days-wrapper {
+      overflow-x: hidden;
+    }
+    .day-column {
+      display: none;
+      min-width: 100%;
+      flex: none;
+    }
+    .day-column.mobile-visible {
+      display: block;
+    }
+    .day-header {
+      display: none;
+    }
+    .block {
+      left: 2px; right: 2px;
+      padding: 4px 6px;
+    }
+    .block-label {
+      font-size: 12px;
+      white-space: normal;
+    }
+    .block-time {
+      font-size: 10px;
+    }
+    .bullet {
+      font-size: 10px;
+      white-space: normal;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>☽ Solanum</h1>
+    <span class="subtitle">Week of Feb 16, 2026</span>
+  </div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="schedule-container" id="scheduleContainer">
+    <div class="time-gutter">
+      <div class="hour-label" style="top:0px;">7 AM</div>
+<div class="hour-label" style="top:60px;">8 AM</div>
+<div class="hour-label" style="top:120px;">9 AM</div>
+<div class="hour-label" style="top:180px;">10 AM</div>
+<div class="hour-label" style="top:240px;">11 AM</div>
+<div class="hour-label" style="top:300px;">12 PM</div>
+<div class="hour-label" style="top:360px;">1 PM</div>
+<div class="hour-label" style="top:420px;">2 PM</div>
+<div class="hour-label" style="top:480px;">3 PM</div>
+<div class="hour-label" style="top:540px;">4 PM</div>
+<div class="hour-label" style="top:600px;">5 PM</div>
+<div class="hour-label" style="top:660px;">6 PM</div>
+<div class="hour-label" style="top:720px;">7 PM</div>
+<div class="hour-label" style="top:780px;">8 PM</div>
+<div class="hour-label" style="top:840px;">9 PM</div>
+<div class="hour-label" style="top:900px;">10 PM</div>
+<div class="hour-label" style="top:960px;">11 PM</div>
+
+    </div>
+    <div class="days-wrapper">
+      <div style="position:absolute; top:40px; left:0; right:0; pointer-events:none; z-index:1;">
+        <div class="grid-line" style="top:0px;"></div>
+<div class="grid-line" style="top:60px;"></div>
+<div class="grid-line" style="top:120px;"></div>
+<div class="grid-line" style="top:180px;"></div>
+<div class="grid-line" style="top:240px;"></div>
+<div class="grid-line" style="top:300px;"></div>
+<div class="grid-line" style="top:360px;"></div>
+<div class="grid-line" style="top:420px;"></div>
+<div class="grid-line" style="top:480px;"></div>
+<div class="grid-line" style="top:540px;"></div>
+<div class="grid-line" style="top:600px;"></div>
+<div class="grid-line" style="top:660px;"></div>
+<div class="grid-line" style="top:720px;"></div>
+<div class="grid-line" style="top:780px;"></div>
+<div class="grid-line" style="top:840px;"></div>
+<div class="grid-line" style="top:900px;"></div>
+<div class="grid-line" style="top:960px;"></div>
+
+      </div>
+      
+        <div class="day-column today">
+            <div class="day-header">Mon Feb 16</div>
+            <div class="day-body" style="height:960px;">
+                <div class="now-marker" style="top:684px;"></div>
+                
+            <div class="block cat-blocked"
+                 style="top:150px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">09:30–10:00</div>
+                <div class="block-label">Wake up &amp; breakfast</div>
+                
+            </div>
+            </div>
+        </div>
+        <div class="day-column">
+            <div class="day-header">Tue Feb 17</div>
+            <div class="day-body" style="height:960px;">
+                
+                
+            <div class="block cat-blocked"
+                 style="top:150px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">09:30–10:00</div>
+                <div class="block-label">Wake up &amp; breakfast</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:180px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">10:00–12:00</div>
+                <div class="block-label">Pack &amp; clean (round 1)</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:300px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">12:00–12:30</div>
+                <div class="block-label">Lunch</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:330px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">12:30–14:30</div>
+                <div class="block-label">Pack &amp; clean (round 2)</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:450px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">14:30–16:30</div>
+                <div class="block-label">Last-minute trip prep / charge devices</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:600px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">17:00–19:00</div>
+                <div class="block-label">Bowling</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:720px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">19:00–19:30</div>
+                <div class="block-label">Dinner</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:750px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">19:30–21:00</div>
+                <div class="block-label">Final pack check &amp; early bed</div>
+                
+            </div>
+            </div>
+        </div>
+        <div class="day-column">
+            <div class="day-header">Wed Feb 18</div>
+            <div class="day-body" style="height:960px;">
+                
+                
+            <div class="block cat-blocked"
+                 style="top:0px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">07:00–07:30</div>
+                <div class="block-label">Wake up early (flight day!)</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:30px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">07:30–08:00</div>
+                <div class="block-label">Breakfast &amp; last-minute prep</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:60px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">08:00–10:00</div>
+                <div class="block-label">Drive to airport</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:180px; height:150px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">10:00–12:30</div>
+                <div class="block-label">Airport check-in &amp; boarding</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:334px; height:133px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">12:34–14:47</div>
+                <div class="block-label">✈️ Flight ATL → EWR</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:467px; height:73px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">14:47–16:00</div>
+                <div class="block-label">Drive Newark → Manhattan</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:540px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">16:00–17:30</div>
+                <div class="block-label">Hotel check-in (Luxury Collection 54th St)</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:660px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">18:00–19:30</div>
+                <div class="block-label">🍜 Dinner w/ Aunt Ashley — Momofuku Noodle Bar</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:750px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">19:30–21:30</div>
+                <div class="block-label">Evening walk / settle in</div>
+                
+            </div>
+            </div>
+        </div>
+        <div class="day-column">
+            <div class="day-header">Thu Feb 19</div>
+            <div class="day-body" style="height:960px;">
+                
+                
+            <div class="block cat-blocked"
+                 style="top:120px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">09:00–09:30</div>
+                <div class="block-label">Wake up &amp; breakfast</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:150px; height:150px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">09:30–12:00</div>
+                <div class="block-label">Explore NYC (morning)</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:300px; height:60px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">12:00–13:00</div>
+                <div class="block-label">Lunch</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:360px; height:300px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">13:00–18:00</div>
+                <div class="block-label">Explore NYC (afternoon)</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:690px; height:30px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">18:30–19:00</div>
+                <div class="block-label">🍕 Pizza dinner before show</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:720px; height:150px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">19:00–21:30</div>
+                <div class="block-label">🎭 Hadestown on Broadway</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:870px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">21:30–23:00</div>
+                <div class="block-label">Post-show walk</div>
+                
+            </div>
+            </div>
+        </div>
+        <div class="day-column">
+            <div class="day-header">Fri Feb 20</div>
+            <div class="day-body" style="height:960px;">
+                
+                
+            <div class="block cat-blocked"
+                 style="top:120px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">09:00–09:30</div>
+                <div class="block-label">Wake up &amp; breakfast</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:150px; height:150px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">09:30–12:00</div>
+                <div class="block-label">Explore NYC (morning)</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:300px; height:60px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">12:00–13:00</div>
+                <div class="block-label">Lunch</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:360px; height:270px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">13:00–17:30</div>
+                <div class="block-label">Explore NYC (afternoon)</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:630px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">17:30–19:00</div>
+                <div class="block-label">🥟 Dim sum dinner</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:750px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">19:30–21:30</div>
+                <div class="block-label">🎭 Oh, Mary! on Broadway</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:870px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">21:30–23:00</div>
+                <div class="block-label">Evening in the city</div>
+                
+            </div>
+            </div>
+        </div>
+        <div class="day-column">
+            <div class="day-header">Sat Feb 21</div>
+            <div class="day-body" style="height:960px;">
+                
+                
+            <div class="block cat-blocked"
+                 style="top:120px; height:30px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">09:00–09:30</div>
+                <div class="block-label">Wake up &amp; breakfast</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:150px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">09:30–11:00</div>
+                <div class="block-label">Last morning in NYC</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:240px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">11:00–13:00</div>
+                <div class="block-label">Check out &amp; head to airport</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:360px; height:180px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">13:00–16:00</div>
+                <div class="block-label">✈️ Flight home</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:540px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">16:00–17:30</div>
+                <div class="block-label">Drive home from airport</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:630px; height:60px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">17:30–18:30</div>
+                <div class="block-label">Unpack</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:690px; height:60px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">18:30–19:30</div>
+                <div class="block-label">Dinner</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:750px; height:150px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">19:30–22:00</div>
+                <div class="block-label">Relax / catch up</div>
+                
+            </div>
+            </div>
+        </div>
+        <div class="day-column">
+            <div class="day-header">Sun Feb 22</div>
+            <div class="day-body" style="height:960px;">
+                
+                
+            <div class="block cat-blocked"
+                 style="top:90px; height:60px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">08:30–09:30</div>
+                <div class="block-label">Wake up &amp; get ready</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:180px; height:120px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">10:00–12:00</div>
+                <div class="block-label">⛪ Church</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:300px; height:60px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">12:00–13:00</div>
+                <div class="block-label">Lunch</div>
+                
+            </div>
+            <div class="block cat-filming"
+                 style="top:360px; height:90px; background:#ebcb8b20; border-color:#ebcb8b;">
+                <div class="block-time">13:00–14:30</div>
+                <div class="block-label">Filming — Atlanta weather recap</div>
+                
+            </div>
+            <div class="block cat-editing"
+                 style="top:450px; height:120px; background:#b48ead20; border-color:#b48ead;">
+                <div class="block-time">14:30–16:30</div>
+                <div class="block-label">Edit weather video</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:600px; height:90px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">17:00–18:30</div>
+                <div class="block-label">🎵 Choir</div>
+                
+            </div>
+            <div class="block cat-blocked"
+                 style="top:690px; height:60px; background:#3b3b4f20; border-color:#3b3b4f;">
+                <div class="block-time">18:30–19:30</div>
+                <div class="block-label">Dinner</div>
+                
+            </div>
+            <div class="block cat-personal"
+                 style="top:750px; height:150px; background:#a3be8c20; border-color:#a3be8c;">
+                <div class="block-time">19:30–22:00</div>
+                <div class="block-label">Free time / prep for school</div>
+                
+            </div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('scheduleContainer').scrollTop = 600;
+
+    // Mobile day-tab switching
+    (function() {
+      var cols = document.querySelectorAll('.day-column');
+      var tabs = document.getElementById('dayTabs');
+      var todayIdx = -1;
+
+      cols.forEach(function(col, i) {
+        var header = col.querySelector('.day-header');
+        var label = header ? header.textContent.trim() : 'Day ' + (i+1);
+        var isToday = col.classList.contains('today');
+        if (isToday) todayIdx = i;
+
+        var tab = document.createElement('div');
+        tab.className = 'day-tab' + (isToday ? ' is-today' : '');
+        tab.textContent = label.split(' ').slice(0, 2).join(' ');
+        tab.dataset.index = i;
+        tab.addEventListener('click', function() {
+          showDay(i);
+        });
+        tabs.appendChild(tab);
+      });
+
+      function showDay(idx) {
+        cols.forEach(function(col, i) {
+          col.classList.toggle('mobile-visible', i === idx);
+        });
+        tabs.querySelectorAll('.day-tab').forEach(function(t, i) {
+          t.classList.toggle('active', i === idx);
+        });
+      }
+
+      // Default to today, or first day
+      var startIdx = todayIdx >= 0 ? todayIdx : 0;
+      showDay(startIdx);
+    })();
+  </script>
+</body>
+</html>
